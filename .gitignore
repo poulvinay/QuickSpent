@@ -1,5 +1,40 @@
-.venv/
+# Python bytecode and local environments
 __pycache__/
 *.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Buildozer and Android build output
 .buildozer/
 bin/
+.gradle/
+local.properties
+*.iml
+*.apk
+*.aab
+
+# Local SQLite databases and journals
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Generated logs and crash dumps
+*.log
+*.core
+core
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
