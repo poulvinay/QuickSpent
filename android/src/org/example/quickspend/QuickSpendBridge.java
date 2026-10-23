@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.content.res.Configuration;
 import android.graphics.drawable.Icon;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
@@ -38,6 +39,12 @@ public class QuickSpendBridge {
 
     public static void updateWidget(Context context, String income, String outgoing) {
         QuickSpendWidgetProvider.updateWidget(context, income, outgoing);
+    }
+
+    public static boolean isNightMode(Context context) {
+        int nightMode = context.getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+        return nightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
     public static boolean pinWidget(Activity activity) {

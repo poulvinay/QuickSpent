@@ -1,7 +1,7 @@
 from kivy.utils import platform
 
 from .formatting import money
-from .ui import left_label, make_button
+from .ui import make_button, make_label, theme
 
 
 
@@ -23,6 +23,17 @@ class AndroidIntegrationMixin:
         except Exception:
             return None, None
 
+    @staticmethod
+    def _android_sdk_int():
+        if platform != "android":
+            return 0
+        try:
+            from jnius import autoclass
+
+            return autoclass("android.os.Build$VERSION").SDK_INT
+        except Exception:
+            return 0
+
     def _update_android_widget(self, income, outgoing):
         activity, bridge = self._android_bridge()
         if bridge:
@@ -39,34 +50,59 @@ class AndroidIntegrationMixin:
         except Exception:
             return
 
+    def _system_dark_mode(self):
+        activity, bridge = self._android_bridge()
+        if not bridge:
+            return False
+        try:
+            return bool(bridge.isNightMode(activity))
+        except Exception:
+            return False
+
+    def apply_system_theme(self, refresh_colors=False):
+        theme_style = "Dark" if self._system_dark_mode() else "Light"
+        if self.theme_cls.theme_style != theme_style:
+            # Changing the style also regenerates the colour scheme.
+            self.theme_cls.theme_style = theme_style
+        elif refresh_colors:
+            # Material You colours follow the wallpaper, which may have changed.
+            self.theme_cls.set_colors()
+
+    def _consume_configuration_change(self, _dt):
+        activity, bridge = self._android_bridge()
+        if not bridge:
+            return
+        try:
+            changed = self._quick_activity_class.consumeConfigurationChange()
+        except Exception:
+            return
+        if changed:
+            self.apply_system_theme(refresh_colors=True)
+
     def quick_access_popup(self):
-        popup, content = self._dialog("Quick access", 510)
-        content.add_widget(left_label(
-            "Choose where you want an Add money entry point.", 44, 14
-        ))
-        content.add_widget(make_button(
-            "Add home screen widget", lambda *_: self._request_android_action("pinWidget"),
-            48, 15, "secondary",
-        ))
-        content.add_widget(make_button(
-            "Pin Add money shortcut", lambda *_: self._request_android_action("pinAddMoneyShortcut"),
-            48, 15, "secondary",
-        ))
-        content.add_widget(make_button(
-            "Lockscreen / heads-up notification",
-            lambda *_: self._request_android_action("showQuickAccessNotification"),
-            48, 15, "secondary",
-        ))
-        content.add_widget(make_button(
-            "Add Quick Settings tile", lambda *_: self._request_android_action("requestQuickSettingsTile"),
-            48, 15, "secondary",
-        ))
-        content.add_widget(left_label(
+        dialog, content, actions = self._dialog(
+            "Quick access", "Choose where you want an Add money entry point."
+        )
+        entry_points = (
+            ("Add home screen widget", "widgets-outline", "pinWidget"),
+            ("Pin Add money shortcut", "pin-outline", "pinAddMoneyShortcut"),
+            ("Lockscreen / heads-up notification", "bell-ring-outline", "showQuickAccessNotification"),
+            ("Add Quick Settings tile", "toggle-switch-outline", "requestQuickSettingsTile"),
+        )
+        for label, icon, method_name in entry_points:
+            content.add_widget(make_button(
+                label,
+                lambda *_, name=method_name: self._request_android_action(name),
+                48,
+                "secondary",
+                icon=icon,
+            ))
+        content.add_widget(make_label(
             "Android controls lock screen and pop-up visibility. The bottom navigation bar cannot host app buttons; use the Quick Settings tile instead.",
-            66, 12,
+            "Body", "small", theme().onSurfaceVariantColor,
         ))
-        content.add_widget(make_button("Done", lambda *_: popup.dismiss(), 44, 14))
-        popup.open()
+        actions.add_widget(self._dialog_button("Done", lambda *_: dialog.dismiss()))
+        dialog.open()
 
     def _request_android_action(self, method_name):
         activity, bridge = self._android_bridge()
@@ -80,7 +116,8 @@ class AndroidIntegrationMixin:
         except Exception as exc:
             self.show_message("Could not add shortcut", str(exc))
 
-    def _settings_action(self, _dropdown, action):
+    def _settings_action(self, action):
+        self.settings_menu.dismiss()
         if action == "category":
             self.add_category_popup()
         elif action == "shortcuts":

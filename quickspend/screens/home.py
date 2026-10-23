@@ -1,39 +1,45 @@
 from datetime import datetime
 
 from kivy.metrics import dp
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.scrollview import ScrollView
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.scrollview import MDScrollView
 
 from ..formatting import date_text, money
-from ..ui import GREEN, GREEN_PALE, RED, RED_PALE, Surface, centered_label, left_label, make_button
+from ..ui import Surface, flow_color, make_button, make_label, theme
 
 
 
 class HomeScreenMixin:
     def _build_home(self):
-        layout = self._page("QuickSpend", settings=True)
-        layout.add_widget(left_label("This month's cash flow", 30, 15))
-        totals_row = BoxLayout(size_hint_y=None, height=dp(100), spacing=dp(10))
-        in_card = Surface(orientation="vertical", padding=dp(8), spacing=dp(2), fill=GREEN, radius=18)
-        out_card = Surface(orientation="vertical", padding=dp(8), spacing=dp(2), fill=RED, radius=18)
-        in_card.add_widget(centered_label("Money in", 30, 14, (1, 1, 1, 1)))
-        self.month_in_total = centered_label("₹0.00", 45, 21, (1, 1, 1, 1), True)
-        out_card.add_widget(centered_label("Money out", 30, 14, (1, 1, 1, 1)))
-        self.month_out_total = centered_label("₹0.00", 45, 21, (1, 1, 1, 1), True)
+        layout = self._page(self.home, "QuickSpend", settings=True)
+        layout.add_widget(make_label("This month's cash flow", "Title", "small"))
+        totals_row = MDBoxLayout(adaptive_height=True, spacing=dp(12))
+        in_card = Surface(orientation="vertical", padding=dp(16), spacing=dp(4),
+                          adaptive_height=True, radius=20)
+        out_card = Surface(orientation="vertical", padding=dp(16), spacing=dp(4),
+                           adaptive_height=True, radius=20)
+        in_card.add_widget(make_label("Money in", "Label", "large", halign="center"))
+        self.month_in_total = make_label("₹0.00", "Headline", "small", bold=True, halign="center")
+        out_card.add_widget(make_label("Money out", "Label", "large", halign="center"))
+        self.month_out_total = make_label("₹0.00", "Headline", "small", bold=True, halign="center")
         in_card.add_widget(self.month_in_total)
         out_card.add_widget(self.month_out_total)
         totals_row.add_widget(in_card)
         totals_row.add_widget(out_card)
+        self.month_total_cards = {"In": in_card, "Out": out_card}
         layout.add_widget(totals_row)
-        layout.add_widget(make_button("+  Add money", lambda *_: self.open_amount(), 64, 20))
-        layout.add_widget(make_button("Expense history", lambda *_: self.open_history()))
-        layout.add_widget(left_label("Recent activity", 38, 18, True))
-        self.recent_box = BoxLayout(orientation="vertical", spacing=dp(6), size_hint_y=None)
-        self.recent_box.bind(minimum_height=self.recent_box.setter("height"))
-        scroll = ScrollView()
+        layout.add_widget(make_button(
+            "Add money", lambda *_: self.open_amount(), 64, icon="plus",
+            font_style="Title", role="medium",
+        ))
+        layout.add_widget(make_button(
+            "Expense history", lambda *_: self.open_history(), 52, "secondary", icon="history",
+        ))
+        layout.add_widget(make_label("Recent activity", "Title", "medium", bold=True))
+        self.recent_box = MDBoxLayout(orientation="vertical", spacing=dp(8), adaptive_height=True)
+        scroll = MDScrollView()
         scroll.add_widget(self.recent_box)
         layout.add_widget(scroll)
-        self.home.add_widget(layout)
 
     def _start_of_month(self):
         return datetime.now().astimezone().replace(
@@ -44,21 +50,26 @@ class HomeScreenMixin:
         income, outgoing = self.db.get_cashflow_since(self._start_of_month())
         self.month_in_total.text = money(income, self.currency)
         self.month_out_total.text = money(outgoing, self.currency)
+        for flow, card in self.month_total_cards.items():
+            card.md_bg_color = flow_color(flow)
+            for label in card.children:
+                label.text_color = flow_color(flow, "on_main")
         self._update_android_widget(income, outgoing)
         self.recent_box.clear_widgets()
         expenses = self.db.get_expenses(6)
         if not expenses:
-            self.recent_box.add_widget(left_label("No expenses yet. Add your first one above.", 54, 15))
+            self.recent_box.add_widget(make_label("No expenses yet. Add your first one above."))
         for expense in expenses:
             _id, amount, currency, _category_id, name, flow, _note, spent_at = expense
-            color = GREEN if flow == "In" else RED
-            row = Surface(orientation="vertical", padding=(dp(12), dp(5)),
-                          size_hint_y=None, height=dp(58), fill=GREEN_PALE if flow == "In" else RED_PALE,
-                          radius=14)
-            transaction_label = left_label(f"{name}  ·  {flow.upper()}  ·  {money(amount, currency)}", 28, 15, True)
-            transaction_label.color = color
-            row.add_widget(transaction_label)
-            row.add_widget(left_label(date_text(spent_at), 20, 12))
+            row = Surface(orientation="vertical", padding=(dp(16), dp(10)), spacing=dp(2),
+                          adaptive_height=True, fill=flow_color(flow, "container"), radius=12)
+            row.add_widget(make_label(
+                f"{name}  ·  {flow.upper()}  ·  {money(amount, currency)}",
+                "Title", "small", flow_color(flow), bold=True,
+            ))
+            row.add_widget(make_label(
+                date_text(spent_at), "Body", "small", theme().onSurfaceVariantColor,
+            ))
             self.recent_box.add_widget(row)
 
 

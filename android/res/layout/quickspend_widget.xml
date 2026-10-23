@@ -3,16 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:paddingStart="16dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp"
     android:background="@drawable/quickspend_widget_bg">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:text="QuickSpend · This month"
-        android:textColor="#17302E"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textColor="@color/quickspend_widget_on_surface"
+        android:textSize="14sp" />
 
     <LinearLayout
         android:id="@+id/widget_totals_horizontal"
@@ -27,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="In"
-            android:textColor="#267A4A"
+            android:textColor="@color/quickspend_widget_in"
             android:textSize="12sp" />
 
         <TextView
@@ -36,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="₹0.00"
-            android:textColor="#267A4A"
+            android:textColor="@color/quickspend_widget_in"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -45,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Out"
-            android:textColor="#B83832"
+            android:textColor="@color/quickspend_widget_out"
             android:textSize="12sp" />
 
         <TextView
@@ -54,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="₹0.00"
-            android:textColor="#B83832"
+            android:textColor="@color/quickspend_widget_out"
             android:textSize="14sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -80,14 +83,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Money in"
-                android:textColor="#267A4A"
+                android:textColor="@color/quickspend_widget_in"
                 android:textSize="13sp" />
             <TextView
                 android:id="@+id/widget_income_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="₹0.00"
-                android:textColor="#267A4A"
+                android:textColor="@color/quickspend_widget_in"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -104,14 +107,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Money out"
-                android:textColor="#B83832"
+                android:textColor="@color/quickspend_widget_out"
                 android:textSize="13sp" />
             <TextView
                 android:id="@+id/widget_outgoing_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="₹0.00"
-                android:textColor="#B83832"
+                android:textColor="@color/quickspend_widget_out"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -127,10 +130,10 @@
         android:id="@+id/widget_add"
         android:layout_width="match_parent"
         android:layout_height="42dp"
+        android:background="@drawable/quickspend_widget_button_bg"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:text="+  Add money"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:background="#1F6E6B" />
+        android:textColor="@color/quickspend_widget_on_primary"
+        android:textSize="15sp" />
 </LinearLayout>
