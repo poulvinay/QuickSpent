@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="quickspend_widget_surface">#131B1A</color>
+    <color name="quickspend_widget_on_surface">#DCE8E6</color>
+    <color name="quickspend_widget_primary">#9BD0CD</color>
+    <color name="quickspend_widget_on_primary">#0D4846</color>
+    <color name="quickspend_widget_in">#82D9A0</color>
+    <color name="quickspend_widget_out">#FFB4AC</color>
+</resources>

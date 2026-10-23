@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: follow the wallpaper (Material You) like the app does. -->
+<resources>
+    <color name="quickspend_widget_surface">@android:color/system_neutral1_10</color>
+    <color name="quickspend_widget_on_surface">@android:color/system_neutral1_900</color>
+    <color name="quickspend_widget_primary">@android:color/system_accent1_600</color>
+    <color name="quickspend_widget_on_primary">@android:color/system_accent1_0</color>
+</resources>

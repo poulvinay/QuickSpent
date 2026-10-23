@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home screen widget colours, matching the app's teal Material 3 scheme. -->
+<resources>
+    <color name="quickspend_widget_surface">#F6FAF9</color>
+    <color name="quickspend_widget_on_surface">#2A3434</color>
+    <color name="quickspend_widget_primary">#1B6A67</color>
+    <color name="quickspend_widget_on_primary">#E1FFFC</color>
+    <color name="quickspend_widget_in">#076D3E</color>
+    <color name="quickspend_widget_out">#B02D29</color>
+</resources>
