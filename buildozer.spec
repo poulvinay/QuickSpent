@@ -18,7 +18,9 @@ android.permissions = POST_NOTIFICATIONS
 p4a.extra_args = --extra-manifest-application-xml '<receiver android:name="org.example.quickspend.QuickSpendWidgetProvider" android:exported="true" android:label="QuickSpend"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/quickspend_widget_info"/></receiver><service android:name="org.example.quickspend.QuickSpendTileService" android:exported="true" android:label="Add money" android:icon="@drawable/ic_add_money" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"><intent-filter><action android:name="android.service.quicksettings.action.QS_TILE"/></intent-filter></service>'
 
 version = 1.0.0
-requirements = python3,kivy
+# p4a installs pure-Python packages without their dependencies, so KivyMD's are
+# listed too. materialyoucolor is a p4a recipe whose default version is too old.
+requirements = python3,kivy==2.3.1,kivymd==2.0.0,materialyoucolor==3.0.4,asynckivy==0.6.4,asyncgui==0.6.3,pillow
 
 orientation = portrait
 fullscreen = 0

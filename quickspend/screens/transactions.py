@@ -2,57 +2,60 @@ import sqlite3
 
 from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.scrollview import ScrollView
+from kivy.uix.widget import Widget
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.scrollview import MDScrollView
 
 from ..formatting import money, parse_amount_minor
-from ..ui import GREEN, RED, Surface, left_label, make_button, make_field
+from ..ui import flow_color, make_button, make_field, make_label
 
 
 
 class TransactionScreenMixin:
     def _build_amount(self):
-        layout = self._page("Record money")
-        layout.add_widget(left_label("Enter the amount you want to record", 50, 18))
-        amount_card = Surface(orientation="vertical", padding=dp(8), size_hint_y=None,
-                              height=dp(92), fill=(1, 1, 1, 1), radius=16)
+        layout = self._page(self.amount_screen, "Record money")
+        layout.add_widget(make_label("Enter the amount you want to record", "Body", "large"))
         self.amount_input = make_field(
-            "0.00", numeric=True, height=76, font_size=32, halign="center"
+            "Amount in INR",
+            numeric=True,
+            error_text="Enter an amount greater than zero.",
+            font_style="Headline",
+            role="medium",
+            halign="center",
+            height=dp(76),
         )
-        self.amount_input.write_tab = False
         self.amount_input.bind(on_text_validate=lambda *_: self.go_to_categories())
-        amount_card.add_widget(self.amount_input)
-        layout.add_widget(amount_card)
-        layout.add_widget(left_label("Amount in INR", 28, 14))
-        self.note_input = make_field("Note (optional)", height=50)
+        # The error text is drawn just below the field, so leave room for it.
+        layout.add_widget(MDBoxLayout(self.amount_input, adaptive_height=True, padding=(0, 0, 0, dp(14))))
+        self.note_input = make_field("Note (optional)")
         layout.add_widget(self.note_input)
-        self.amount_error = left_label("", 34, 14)
-        self.amount_error.color = (0.75, 0.12, 0.12, 1)
-        layout.add_widget(self.amount_error)
-        layout.add_widget(make_button("Next · Choose category", lambda *_: self.go_to_categories(), 58))
-        layout.add_widget(make_button("Back to Home", lambda *_: self.go_home(), 48, 15, "secondary"))
-        layout.add_widget(Label())
-        self.amount_screen.add_widget(layout)
+        layout.add_widget(make_button(
+            "Next · Choose category", lambda *_: self.go_to_categories(), 56, icon="arrow-right",
+        ))
+        layout.add_widget(make_button("Back to Home", lambda *_: self.go_home(), 48, "secondary"))
+        layout.add_widget(Widget())
 
     def _build_category(self):
-        layout = self._page("Choose a category")
-        self.category_amount = left_label("", 48, 17, True)
+        layout = self._page(self.category_screen, "Choose a category")
+        self.category_amount = make_label("", "Title", "medium", bold=True)
         layout.add_widget(self.category_amount)
-        self.category_box = BoxLayout(orientation="vertical", spacing=dp(8), size_hint_y=None)
-        self.category_box.bind(minimum_height=self.category_box.setter("height"))
-        scroll = ScrollView()
+        self.category_box = MDBoxLayout(orientation="vertical", spacing=dp(8), adaptive_height=True)
+        self._category_signature = None
+        scroll = MDScrollView()
         scroll.add_widget(self.category_box)
         layout.add_widget(scroll)
-        layout.add_widget(make_button("+  Add category", lambda *_: self.add_category_popup()))
-        layout.add_widget(make_button("Back to amount", lambda *_: self.open_amount(keep=True), 46, 15))
-        self.category_screen.add_widget(layout)
+        layout.add_widget(make_button(
+            "Add category", lambda *_: self.add_category_popup(), 52, "outlined", icon="plus",
+        ))
+        layout.add_widget(make_button(
+            "Back to amount", lambda *_: self.open_amount(keep=True), 48, "secondary",
+        ))
 
     def open_amount(self, keep=False, initial=""):
         if not keep:
             self.amount_input.text = initial
             self.note_input.text = ""
-            self.amount_error.text = ""
+            self.amount_input.error = False
         self.screens.transition.direction = "left"
         self.screens.current = "amount"
         Clock.schedule_once(lambda *_: self._focus_amount(), 0.2)
@@ -65,7 +68,7 @@ class TransactionScreenMixin:
         try:
             minor = parse_amount_minor(self.amount_input.text)
         except ValueError:
-            self.amount_error.text = "Enter an amount greater than zero."
+            self.amount_input.error = True
             return
         self.pending_amount = minor
         self.pending_note = self.note_input.text.strip()
@@ -76,23 +79,30 @@ class TransactionScreenMixin:
         self.screens.current = "category"
 
     def refresh_categories(self):
-        self.category_box.clear_widgets()
         categories = self.db.get_categories()
+        # Material buttons are slow to create, so only rebuild after a change.
+        signature = (categories, self.theme_cls.theme_style)
+        if signature == self._category_signature:
+            return
+        self._category_signature = signature
+        self.category_box.clear_widgets()
         for flow in ("Out", "In"):
             group = [item for item in categories if item[2] == flow]
             if not group:
                 continue
-            heading = left_label("Money out" if flow == "Out" else "Money in", 38, 16, True)
-            heading.color = RED if flow == "Out" else GREEN
-            self.category_box.add_widget(heading)
+            self.category_box.add_widget(make_label(
+                "Money out" if flow == "Out" else "Money in",
+                "Title", "small", flow_color(flow), bold=True, padding=(0, dp(8), 0, 0),
+            ))
             variant = "expense" if flow == "Out" else "income"
             for category_id, name, _flow, _archived in group:
                 self.category_box.add_widget(make_button(
                     name,
                     lambda _, cid=category_id: self.save_expense(cid),
-                    58,
-                    18,
+                    56,
                     variant,
+                    font_style="Title",
+                    role="medium",
                 ))
 
     def save_expense(self, category_id):
@@ -108,6 +118,8 @@ class TransactionScreenMixin:
     def _on_keyboard(self, _window, key, *_args):
         if key not in (27, 1001):
             return False
+        if self._dismiss_overlay():
+            return True
         if self.screens.current == "category":
             self.open_amount(keep=True)
             return True

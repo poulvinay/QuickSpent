@@ -1,8 +1,10 @@
-from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
-from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.screenmanager import SlideTransition
+from kivymd.app import MDApp
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.screenmanager import MDScreenManager
 
 from database import ExpenseDatabase
 from quickspend import APP_VERSION
@@ -13,6 +15,7 @@ from quickspend.screens.history import HistoryScreenMixin
 from quickspend.screens.home import HomeScreenMixin
 from quickspend.screens.transactions import TransactionScreenMixin
 from quickspend.loading import StartupLoader
+from quickspend.ui import TEAL
 
 
 class SpendTrackerApp(
@@ -22,7 +25,7 @@ class SpendTrackerApp(
     CategoryActionsMixin,
     DialogMixin,
     AndroidIntegrationMixin,
-    App,
+    MDApp,
 ):
     version = APP_VERSION
 
@@ -37,11 +40,14 @@ class SpendTrackerApp(
         self._quick_activity_class = None
         Window.bind(on_keyboard=self._on_keyboard)
 
-        self.screens = ScreenManager(transition=SlideTransition(duration=0.15))
-        self.home = Screen(name="home")
-        self.amount_screen = Screen(name="amount")
-        self.category_screen = Screen(name="category")
-        self.history_screen = Screen(name="history")
+        self.theme_cls.theme_style_switch_animation = False
+        self.theme_cls.primary_palette = TEAL
+
+        self.screens = MDScreenManager(transition=SlideTransition(duration=0.15))
+        self.home = MDScreen(name="home")
+        self.amount_screen = MDScreen(name="amount")
+        self.category_screen = MDScreen(name="category")
+        self.history_screen = MDScreen(name="history")
         for screen in (self.home, self.amount_screen, self.category_screen, self.history_screen):
             self.screens.add_widget(screen)
         self._build_home()
@@ -49,8 +55,9 @@ class SpendTrackerApp(
         self._build_category()
         self._build_history()
         self.refresh_home()
+        self.refresh_categories()
         Clock.schedule_interval(self._consume_quick_entry_request, 0.35)
-        self.root_layout = FloatLayout()
+        self.root_layout = MDFloatLayout(md_bg_color=self.theme_cls.surfaceColor)
         self.root_layout.add_widget(self.screens)
         self.startup_loader = StartupLoader("icon/loader-spritesheet.png")
         self.root_layout.add_widget(self.startup_loader)
