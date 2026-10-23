@@ -6,8 +6,8 @@ package.domain = org.example
 
 source.dir = .
 source.include_exts = py,png,jpg
-icon.filename = Icon/finance-tracker-icon-square.png
-presplash.filename = Icon/finance-tracker-icon.png
+icon.filename = icon/finance-tracker-icon-square.png
+presplash.filename = icon/finance-tracker-icon.png
 android.presplash_color = #000000
 android.add_src = android/src
 android.add_resources = android/res
