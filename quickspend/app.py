@@ -41,7 +41,10 @@ class SpendTrackerApp(
         self._quick_activity_class = None
         Window.bind(on_keyboard=self._on_keyboard)
 
+        # Material You: wallpaper colours on Android 12+, teal everywhere else
+        # (materialyoucolor would otherwise also sample wallpapers on 7-11).
         self.theme_cls.theme_style_switch_animation = False
+        self.theme_cls.dynamic_color = self._android_sdk_int() >= 31
         self.theme_cls.theme_style = "Dark" if self._system_dark_mode() else "Light"
         self.theme_cls.primary_palette = TEAL
 
@@ -71,7 +74,7 @@ class SpendTrackerApp(
         return self.root_layout
 
     def on_resume(self):
-        self.apply_system_theme()
+        self.apply_system_theme(refresh_colors=True)
 
     def _on_theme_colors(self):
         """Repaint the parts the Material theme does not colour by itself."""
