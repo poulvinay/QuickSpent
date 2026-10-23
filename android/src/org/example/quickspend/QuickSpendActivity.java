@@ -1,6 +1,7 @@
 package org.example.quickspend;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.app.RemoteInput;
 import android.os.Bundle;
 import org.kivy.android.PythonActivity;
@@ -11,6 +12,7 @@ public class QuickSpendActivity extends PythonActivity {
     public static final String REMOTE_AMOUNT = "org.example.quickspend.REMOTE_AMOUNT";
     private static volatile boolean quickEntryRequested = false;
     private static volatile String pendingAmount = "";
+    private static volatile boolean configurationChanged = false;
 
     private static void captureQuickEntry(Intent intent) {
         if (intent != null && intent.getBooleanExtra(EXTRA_QUICK_ENTRY, false)) {
@@ -43,6 +45,20 @@ public class QuickSpendActivity extends PythonActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         captureQuickEntry(intent);
+    }
+
+    // The activity handles uiMode changes itself, so a dark mode switch arrives
+    // here instead of recreating it; Python polls the flag and restyles.
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        configurationChanged = true;
+    }
+
+    public static boolean consumeConfigurationChange() {
+        boolean changed = configurationChanged;
+        configurationChanged = false;
+        return changed;
     }
 
     public static boolean consumeQuickEntryRequest() {

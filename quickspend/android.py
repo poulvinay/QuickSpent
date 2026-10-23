@@ -23,6 +23,17 @@ class AndroidIntegrationMixin:
         except Exception:
             return None, None
 
+    @staticmethod
+    def _android_sdk_int():
+        if platform != "android":
+            return 0
+        try:
+            from jnius import autoclass
+
+            return autoclass("android.os.Build$VERSION").SDK_INT
+        except Exception:
+            return 0
+
     def _update_android_widget(self, income, outgoing):
         activity, bridge = self._android_bridge()
         if bridge:
@@ -38,6 +49,32 @@ class AndroidIntegrationMixin:
                 self.open_amount(initial=amount)
         except Exception:
             return
+
+    def _system_dark_mode(self):
+        activity, bridge = self._android_bridge()
+        if not bridge:
+            return False
+        try:
+            return bool(bridge.isNightMode(activity))
+        except Exception:
+            return False
+
+    def apply_system_theme(self):
+        theme_style = "Dark" if self._system_dark_mode() else "Light"
+        if self.theme_cls.theme_style != theme_style:
+            # Changing the style also regenerates the colour scheme.
+            self.theme_cls.theme_style = theme_style
+
+    def _consume_configuration_change(self, _dt):
+        activity, bridge = self._android_bridge()
+        if not bridge:
+            return
+        try:
+            changed = self._quick_activity_class.consumeConfigurationChange()
+        except Exception:
+            return
+        if changed:
+            self.apply_system_theme()
 
     def quick_access_popup(self):
         dialog, content, actions = self._dialog(
