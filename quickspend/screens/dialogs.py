@@ -17,7 +17,8 @@ from kivymd.uix.dialog import (
 )
 from kivymd.uix.menu import MDDropdownMenu
 
-from ..ui import make_button
+from ..formatting import money, parse_amount_minor
+from ..ui import make_button, make_field
 
 
 class DialogMixin:
@@ -40,6 +41,7 @@ class DialogMixin:
 
     def open_settings_menu(self):
         actions = (
+            ("Monthly spending limit", "cash-minus", "limit"),
             ("Add category", "shape-plus-outline", "category"),
             ("Shortcuts", "gesture-tap-button", "shortcuts"),
             ("Widgets", "widgets-outline", "widgets"),
@@ -56,6 +58,40 @@ class DialogMixin:
             ],
         )
         self.settings_menu.open()
+
+    def spending_limit_popup(self):
+        current = self.db.get_spending_limit()
+        value = f"{current // 100}.{current % 100:02d}" if current else ""
+        dialog, content, actions = self._dialog(
+            "Monthly spending limit",
+            "Get an alert when this month's money out reaches your limit. Enter 0 only by using Disable.",
+        )
+        field = make_field(
+            "Limit in INR", text=value, numeric=True,
+            error_text="Enter a valid amount greater than zero.",
+        )
+        content.add_widget(field)
+
+        def save_limit(*_):
+            try:
+                amount = parse_amount_minor(field.text)
+                self.db.set_spending_limit(amount)
+            except ValueError:
+                field.error = True
+                return
+            dialog.dismiss()
+            if self._check_spending_limit():
+                return
+            self.show_message("Spending limit saved", f"Monthly limit: {money(amount, self.currency)}.")
+
+        def disable_limit(*_):
+            self.db.set_spending_limit(0)
+            dialog.dismiss()
+            self.show_message("Spending limit disabled", "Monthly spending alerts are off.")
+
+        actions.add_widget(self._dialog_button("Disable", disable_limit))
+        actions.add_widget(self._dialog_button("Save", save_limit, "primary"))
+        dialog.open()
 
     def _dialog(self, title, text="", auto_dismiss=True):
         """Return a Material dialog plus its content and action containers."""

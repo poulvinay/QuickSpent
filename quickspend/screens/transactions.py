@@ -113,7 +113,13 @@ class TransactionScreenMixin:
             self.show_message("Could not save expense", str(exc))
             return
         self.go_home()
-        self.show_message("Money recorded", f"Added {money(self.pending_amount, self.currency)} as {category[1] if category else 'a transaction'}.")
+        limit_reached = (
+            self._check_spending_limit()
+            if category and category[2] == "Out"
+            else False
+        )
+        if not limit_reached:
+            self.show_message("Money recorded", f"Added {money(self.pending_amount, self.currency)} as {category[1] if category else 'a transaction'}.")
 
     def _on_keyboard(self, _window, key, *_args):
         if key not in (27, 1001):

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.app.RemoteInput;
 import android.os.Bundle;
+import android.content.pm.PackageManager;
 import org.kivy.android.PythonActivity;
 
 public class QuickSpendActivity extends PythonActivity {
@@ -53,6 +54,13 @@ public class QuickSpendActivity extends PythonActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         configurationChanged = true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        QuickSpendBridge.onNotificationPermissionResult(this, requestCode, grantResults);
     }
 
     public static boolean consumeConfigurationChange() {

@@ -46,6 +46,21 @@ class HomeScreenMixin:
             day=1, hour=0, minute=0, second=0, microsecond=0
         ).isoformat()
 
+    def _check_spending_limit(self):
+        limit = self.db.get_spending_limit()
+        if not limit:
+            return False
+        spent = self.db.get_outgoing_since(self._start_of_month())
+        if spent >= limit:
+            message = (
+                f"You have spent {money(spent, self.currency)} this month, "
+                f"reaching your limit of {money(limit, self.currency)}."
+            )
+            self._notify_spending_limit(message)
+            self.show_message("Spending limit reached", message)
+            return True
+        return False
+
     def refresh_home(self):
         income, outgoing = self.db.get_cashflow_since(self._start_of_month())
         self.month_in_total.text = money(income, self.currency)

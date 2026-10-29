@@ -1,40 +1,51 @@
 # QuickSpend
 
-QuickSpend is an offline-first Kivy money tracker for Android with a Material Design 3 interface built on KivyMD. It records money In or Out using typed categories, stores data locally in SQLite, and provides Android shortcuts to open the amount-entry screen.
+QuickSpend is an offline-first money tracker built with Python, Kivy, and KivyMD. It records income and spending in INR, groups transactions by category, and stores everything on the device in SQLite. The Android build also offers launcher and system shortcuts for opening the transaction flow.
 
-## Look and feel
+## How to use the app
 
-- Material 3 components from KivyMD 2.0: top app bars, filled and tonal buttons, outlined text fields, dialogs, menus, and a date picker for history.
-- Material You: on Android 12+ the colours follow the wallpaper. Elsewhere the app uses a scheme generated from QuickSpend teal.
-- Light and dark themes follow the phone's system setting, including switches made while the app is open.
-- Money in stays green and money out stays red in every theme.
-- The home screen widget uses the same colours, follows dark mode, and on Android 12+ uses the wallpaper colours and the launcher's corner radius.
+### Home
 
-## Money tracking
+The home screen shows this calendar month's income and money out, plus the six most recently recorded transactions. Select **Add money** to start a transaction, or **Expense history** to browse and manage saved transactions. The settings menu (⋮) includes the monthly spending limit, category creation, and Android quick access options.
 
-- Record money in or out with a two-step amount → category flow.
-- Salary and Loaned are seeded as In categories; Food, Transport, Shopping, Bills, Health, and Other are Out categories.
-- Choose In or Out when creating a category.
-- Today's in/out totals and transaction cards use green for money in and red for money out.
-- Edit or delete saved transactions from history.
-- Existing databases are upgraded with a category direction field; existing categories are treated as Out.
+### Record money
+
+1. Enter an amount in INR. Amounts are rounded to two decimal places; zero and negative values are rejected.
+2. Optionally add a note.
+3. Choose a category under **Money out** or **Money in**. This saves the transaction and returns to Home.
+
+The app starts with these categories:
+
+| Money in | Money out |
+| --- | --- |
+| Salary, Loaned | Food, Transport, Shopping, Bills, Health, Other |
+
+Use **Add category** in the settings menu or category picker to add a category and choose its direction. Category names must be unique (ignoring letter case). Transactions inherit their direction from the selected category.
+
+### History
+
+History opens on the current month. Use the **Month** menu to choose the current month or a month with saved transactions, then use **Day** to narrow the list to one calendar day or return to **All days**. Up to 300 matching transactions are shown, newest first. Each row shows the direction, category, amount, date/time, and optional note. **Edit** changes the amount, category, or note; **Delete** removes the transaction after confirmation.
+
+### Monthly spending limit
+
+Choose **Monthly spending limit** from Home's settings menu and enter a positive amount in INR. QuickSpend checks the month's total Money out after each outgoing transaction. When that total reaches or exceeds the limit, it displays an in-app alert and, on Android when notifications are allowed, a system notification. The limit is saved locally and checked against each calendar month. Choose **Disable** in the limit dialog to turn it off.
 
 ## Android quick access
 
-Open **Shortcuts and widgets** in the app for these Android entry points:
+Choose **Shortcuts** from the settings menu to request an Android entry point:
 
-- **Home screen widget:** shows today's In and Out totals and opens amount entry when tapped. Android asks before placing it.
-- **Pinned Add money shortcut:** adds a separate launcher icon that opens amount entry. The launcher asks before pinning it.
-- **Lock screen / heads-up notification:** posts a private QuickSpend notification with an **Add money** action. Android and the user's notification settings control whether it appears on the lock screen or as a heads-up popup. It does not expose transaction amounts there.
-- **Quick Settings tile:** asks the user to add an **Add money** tile to the swipe-down Quick Settings panel. On older supported Android versions, add it from the Quick Settings edit screen.
+- **Home screen widget** shows this month's income and money out. Tapping it opens amount entry. Android or the launcher may ask before placing it.
+- **Pinned Add money shortcut** adds a separate launcher icon that opens amount entry, subject to launcher support and confirmation.
+- **Lockscreen / heads-up notification** posts a QuickSpend notification with an **Add money** action. Android notification permission and lock screen settings control its display. The notification does not show transaction amounts.
+- **Quick Settings tile** requests an **Add money** tile on Android 13 and later. On earlier supported Android versions, add QuickSpend from the Quick Settings edit screen.
 
-Android apps cannot add their own button to the system's bottom navigation bar. The Quick Settings tile is the supported system shortcut in the swipe-down panel. Lockscreen and heads-up notification display is controlled by Android and may differ by device or user settings.
+Android apps cannot add a button to the system navigation bar at the bottom of the screen. The Quick Settings tile provides access from the swipe-down panel instead.
 
-These Android features use the Java integration and resources under `android/`, registered through `buildozer.spec`. The minimum Android API is 24 for the Quick Settings tile.
+These features are implemented in `android/` and registered through `buildozer.spec`. The app's minimum Android API level is 24. Some shortcuts depend on Android version and launcher support; Android controls notification visibility and widget placement.
 
 ## Run on desktop
 
-Use Python 3.10+ with Kivy and KivyMD:
+Use Python 3.10 or later. From the project directory:
 
 ```bash
 python3 -m venv .venv
@@ -44,18 +55,20 @@ python -m pip install "kivy==2.3.1" "kivymd==2.0.0"
 python main.py
 ```
 
-The desktop build always uses the light teal theme.
+Desktop runs use the light teal theme. Android shortcuts and widgets are only available in a packaged Android build.
 
-Android quick access controls are only available in the packaged Android app.
+## Build for Android
 
-## Android packaging
-
-Buildozer with its Android SDK/NDK dependencies is required on Linux or WSL2:
+Buildozer and its Android SDK/NDK dependencies are required. On Linux or WSL2, build a debug APK with:
 
 ```bash
 buildozer -v android debug
 ```
 
-If you change `requirements` in `buildozer.spec`, run `buildozer android clean` first, because Buildozer keeps packages it has already downloaded.
+The Python requirements, Android API level, Java sources, and Android resources are configured in `buildozer.spec`. If you change its `requirements`, run `buildozer android clean` before rebuilding so Buildozer downloads the updated packages.
 
-The app icon source is `icon/finance-tracker-icon.png`. The local database is stored in the app's private data directory as `expenses.db`; amounts are stored as integer paise to avoid floating point rounding. Data stays on the device.
+## Data and appearance
+
+The database is `expenses.db` in the app's private data directory. Transaction amounts are stored as integer paise to avoid floating-point rounding; the currency is INR. Categories, transaction notes, the monthly limit, and transactions remain on the device. Existing databases are upgraded to include category direction; pre-existing categories are treated as Money out.
+
+The interface uses KivyMD 2.0 Material 3 components. On Android 12 and later, the app uses wallpaper-based Material You colours; otherwise it uses a teal seed colour. The app follows Android's light or dark setting, while income remains green and money out remains red. Desktop runs use the light theme.
