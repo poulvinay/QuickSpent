@@ -16,6 +16,7 @@ QuickSpend is an offline-first Kivy money tracker for Android with a Material De
 - Salary and Loaned are seeded as In categories; Food, Transport, Shopping, Bills, Health, and Other are Out categories.
 - Choose In or Out when creating a category.
 - Today's in/out totals and transaction cards use green for money in and red for money out.
+- **Monthly spending limit:** set a budget from the home screen settings menu. QuickSpend alerts you when monthly money out reaches the limit; the limit is stored on-device and resets against each new calendar month.
 - Edit or delete saved transactions from history.
 - Existing databases are upgraded with a category direction field; existing categories are treated as Out.
 

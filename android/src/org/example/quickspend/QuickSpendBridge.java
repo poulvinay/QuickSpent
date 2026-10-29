@@ -24,7 +24,10 @@ import java.util.function.Consumer;
 
 public class QuickSpendBridge {
     private static final String CHANNEL_ID = "quickspend_quick_add_v2";
+    private static final String BUDGET_CHANNEL_ID = "quickspend_budget_alerts";
     private static final int NOTIFICATION_ID = 4102;
+    private static final int BUDGET_NOTIFICATION_ID = 4103;
+    private static volatile String pendingSpendingLimitMessage;
 
     private static Intent quickEntryIntent(Context context) {
         Intent intent = new Intent(context, QuickSpendActivity.class);
@@ -144,6 +147,60 @@ public class QuickSpendBridge {
                 .setAutoCancel(true)
                 .build();
         manager.notify(NOTIFICATION_ID, notification);
+    }
+
+    public static void showSpendingLimitNotification(Activity activity, String message) {
+        if (Build.VERSION.SDK_INT >= 33
+                && activity.checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                != PackageManager.PERMISSION_GRANTED) {
+            pendingSpendingLimitMessage = message;
+            activity.requestPermissions(
+                    new String[]{"android.permission.POST_NOTIFICATIONS"}, BUDGET_NOTIFICATION_ID);
+            return;
+        }
+
+        NotificationManager manager = activity.getSystemService(NotificationManager.class);
+        if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(BUDGET_CHANNEL_ID) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                    BUDGET_CHANNEL_ID, "Spending limit alerts", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Alerts when monthly spending reaches its limit");
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            manager.createNotificationChannel(channel);
+        }
+
+        Intent launch = new Intent(activity, QuickSpendActivity.class);
+        launch.setAction(Intent.ACTION_MAIN);
+        launch.addCategory(Intent.CATEGORY_LAUNCHER);
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent contentPending = PendingIntent.getActivity(
+                activity, BUDGET_NOTIFICATION_ID, launch,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(activity, BUDGET_CHANNEL_ID)
+                : new Notification.Builder(activity);
+        Notification notification = builder
+                .setSmallIcon(R.drawable.ic_add_money)
+                .setContentTitle("QuickSpend spending limit")
+                .setContentText("Your monthly spending limit has been reached.")
+                .setStyle(new Notification.BigTextStyle().bigText(message))
+                .setCategory(Notification.CATEGORY_REMINDER)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setVisibility(Notification.VISIBILITY_PRIVATE)
+                .setContentIntent(contentPending)
+                .setAutoCancel(true)
+                .build();
+        manager.notify(BUDGET_NOTIFICATION_ID, notification);
+    }
+
+    public static void onNotificationPermissionResult(
+            Activity activity, int requestCode, int[] grantResults) {
+        if (requestCode != BUDGET_NOTIFICATION_ID) return;
+        String message = pendingSpendingLimitMessage;
+        pendingSpendingLimitMessage = null;
+        if (message != null && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            showSpendingLimitNotification(activity, message);
+        }
     }
 
     public static void requestQuickSettingsTile(Activity activity) {
