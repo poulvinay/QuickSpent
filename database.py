@@ -73,6 +73,10 @@ class ExpenseDatabase:
                 );
                 CREATE INDEX IF NOT EXISTS expenses_spent_at_idx
                     ON expenses(spent_at);
+                CREATE TABLE IF NOT EXISTS app_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
                 """
             )
 
@@ -253,3 +257,31 @@ class ExpenseDatabase:
                    WHERE e.spent_at >= ?""",
                 (since,),
             ).fetchone()
+
+    def get_spending_limit(self):
+        with self._connection() as connection:
+            row = connection.execute(
+                "SELECT value FROM app_settings WHERE key = 'monthly_spending_limit'"
+            ).fetchone()
+            return int(row[0]) if row else 0
+
+    def set_spending_limit(self, amount_minor):
+        if not isinstance(amount_minor, int) or amount_minor < 0:
+            raise ValueError("Spending limit must be zero or a positive amount.")
+        with self._connection() as connection:
+            connection.execute(
+                """INSERT INTO app_settings(key, value) VALUES ('monthly_spending_limit', ?)
+                   ON CONFLICT(key) DO UPDATE SET value = excluded.value""",
+                (str(amount_minor),),
+            )
+
+    def get_outgoing_since(self, since):
+        with self._connection() as connection:
+            result = connection.execute(
+                """SELECT COALESCE(SUM(e.amount_minor), 0)
+                   FROM expenses AS e
+                   JOIN categories AS c ON c.id = e.category_id
+                   WHERE c.flow = 'Out' AND e.spent_at >= ?""",
+                (since,),
+            ).fetchone()
+            return result[0]

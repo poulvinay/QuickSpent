@@ -39,6 +39,15 @@ class AndroidIntegrationMixin:
         if bridge:
             bridge.updateWidget(activity, money(income, self.currency), money(outgoing, self.currency))
 
+    def _notify_spending_limit(self, message):
+        activity, bridge = self._android_bridge()
+        if not bridge:
+            return
+        try:
+            bridge.showSpendingLimitNotification(activity, message)
+        except Exception:
+            return
+
     def _consume_quick_entry_request(self, _dt):
         activity, bridge = self._android_bridge()
         if not bridge:
@@ -118,7 +127,9 @@ class AndroidIntegrationMixin:
 
     def _settings_action(self, action):
         self.settings_menu.dismiss()
-        if action == "category":
+        if action == "limit":
+            self.spending_limit_popup()
+        elif action == "category":
             self.add_category_popup()
         elif action == "shortcuts":
             self.quick_access_popup()
